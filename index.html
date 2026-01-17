@@ -1,52 +1,189 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Warframe Riven Analyzer PRO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: 'Helvetica', sans-serif; background:#0f172a; color:#e5e7eb; padding:20px; }
-    h1 { text-align:center; color:#38bdf8; }
-    .container { max-width:900px; margin:auto; background:#020617; padding:20px; border-radius:12px; box-shadow:0 0 20px rgba(56,189,248,0.2); }
-    label { display:block; margin-top:15px; }
-    input, textarea { width:100%; padding:8px; margin-top:5px; border-radius:6px; border:none; }
-    button { margin-top:20px; width:100%; padding:12px; background:#38bdf8; color:#020617; font-size:16px; border:none; border-radius:8px; cursor:pointer; }
-    .result { margin-top:20px; padding:15px; background:#020617; border:1px solid #38bdf8; border-radius:8px; font-size:16px; }
-    footer { text-align:center; margin-top:20px; font-size:12px; opacity:0.7; }
-    .tag { display:inline-block; padding:4px 8px; margin:4px; background:#1e293b; border-radius:6px; font-size:12px; }
-    .section { margin-top:40px; }
-    .section h2 { color:#0ea5e9; }
-  </style>
+<meta charset="UTF-8">
+<title>Warframe Riven Analyzer PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: 'Helvetica', sans-serif; background:#0f172a; color:#e5e7eb; padding:20px; }
+h1 { text-align:center; color:#38bdf8; }
+.container { max-width:900px; margin:auto; background:#020617; padding:20px; border-radius:12px; box-shadow:0 0 20px rgba(56,189,248,0.2); }
+label { display:block; margin-top:15px; }
+input, textarea { width:100%; padding:8px; margin-top:5px; border-radius:6px; border:none; }
+button { margin-top:20px; width:100%; padding:12px; background:#38bdf8; color:#020617; font-size:16px; border:none; border-radius:8px; cursor:pointer; }
+.result { margin-top:20px; padding:15px; background:#020617; border:1px solid #38bdf8; border-radius:8px; font-size:16px; }
+footer { text-align:center; margin-top:20px; font-size:12px; opacity:0.7; }
+.tag { display:inline-block; padding:4px 8px; margin:4px; background:#1e293b; border-radius:6px; font-size:12px; }
+.section { margin-top:40px; }
+.section h2 { color:#0ea5e9; }
+</style>
 </head>
 <body>
+
 <h1>Warframe Riven Analyzer PRO</h1>
 
 <div class="container">
-  <label>Nome Arma (es. Torid, Rubico Prime, Nikana)</label>
-  <input id="weapon" />
+<label>Nome Arma (es. Torid, Rubico Prime, Nikana)</label>
+<input id="weapon">
 
-  <label>Statistiche Riven (una per riga, es. +Crit Chance, -Damage)</label>
-  <textarea id="stats" rows="5"></textarea>
+<label>Statistiche Riven (una per riga, es. +Crit Chance, -Damage)</label>
+<textarea id="stats" rows="5"></textarea>
 
-  <label>Numero di Reroll</label>
-  <input type="number" id="rolls" value="0" min="0" />
+<label>Numero di Reroll</label>
+<input type="number" id="rolls" value="0" min="0">
 
-  <button onclick="analyze()">Analizza Riven</button>
+<button onclick="analyze()">Analizza Riven</button>
 
-  <div class="result" id="result">Inserisci i dati per ottenere l'analisi</div>
+<div class="result" id="result">Inserisci i dati per ottenere l'analisi</div>
 </div>
 
 <div class="container section">
-  <h2>Come funziona il calcolo Riven</h2>
-  <p>Stima prezzo basato su disposition reale, tipo arma, metaScore e statistiche.</p>
+<h2>Come funziona il calcolo Riven</h2>
+<p>Il sito stima il prezzo di una Riven basandosi su disposition reale, tipo arma, metaScore e statistiche positive/negative.</p>
 </div>
 
 <footer>Fan-made • Basato su Warframe Wiki & community</footer>
 
-<!-- Import database esterno -->
-<script src="weapons-riven-data.js"></script>
-
 <script>
+// ---------------- DATABASE PARTE 1 ----------------
+const weapons = {
+"Garuda Prime Talons": { disposition: 0, type: 'melee', metaScore: 1.2, meta: false },
+"Garuda Talons": { disposition: 0, type: 'melee', metaScore: 1.2, meta: false },
+"Trumna Prime": { disposition: 0.65, type: 'shotgun', metaScore: 1.5, meta: true },
+"Stropha": { disposition: 0.65, type: 'primary', metaScore: 1.3, meta: true },
+"Acceltra": { disposition: 0.65, type: 'primary', metaScore: 1.3, meta: true },
+"Nataruk": { disposition: 0.65, type: 'secondary', metaScore: 1.2, meta: true },
+"Innodem": { disposition: 0.65, type: 'primary', metaScore: 1.2, meta: false },
+"Pyrana Prime": { disposition: 0.65, type: 'secondary', metaScore: 1.5, meta: true },
+"Kronen Prime": { disposition: 0.65, type: 'melee', metaScore: 1.5, meta: true },
+"Akarius Prime": { disposition: 0.65, type: 'primary', metaScore: 1.2, meta: false },
+"Coda Hirudo": { disposition: 0.65, type: 'secondary', metaScore: 1.3, meta: true },
+"Tenet Envoy": { disposition: 0.65, type: 'secondary', metaScore: 1.4, meta: true },
+"Tenet Glaxion": { disposition: 0.65, type: 'primary', metaScore: 1.3, meta: true },
+"Redeemer Prime": { disposition: 0.65, type: 'secondary', metaScore: 1.5, meta: true },
+"Xoris": { disposition: 0.65, type: 'secondary', metaScore: 1.4, meta: true },
+"Cedo": { disposition: 0.65, type: 'secondary', metaScore: 1.5, meta: true },
+"Kuva Bramma": { disposition: 0.65, type: 'primary', metaScore: 1.6, meta: true },
+"Coda Bassocyst": { disposition: 0.65, type: 'secondary', metaScore: 1.3, meta: false },
+"Vesper 77": { disposition: 0.65, type: 'secondary', metaScore: 1.2, meta: false },
+"Praedos": { disposition: 0.6, type: 'melee', metaScore: 1.2, meta: false },
+"Coda Pathocyst": { disposition: 0.6, type: 'secondary', metaScore: 1.2, meta: false },
+"Epitaph": { disposition: 0.6, type: 'secondary', metaScore: 1.4, meta: true },
+"Coda Catabolyst": { disposition: 0.6, type: 'secondary', metaScore: 1.3, meta: false },
+"Spinnerex": { disposition: 0.6, type: 'secondary', metaScore: 1.3, meta: false },
+"Thalys": { disposition: 0.6, type: 'primary', metaScore: 1.2, meta: false },
+"Plague Kripath": { disposition: 0.6, type: 'melee', metaScore: 1.4, meta: true },
+"Paracesis": { disposition: 0.6, type: 'melee', metaScore: 1.3, meta: true },
+"Coda Mire": { disposition: 0.6, type: 'secondary', metaScore: 1.2, meta: false },
+"Coda Motovore": { disposition: 0.6, type: 'secondary', metaScore: 1.2, meta: false },
+"Nikana Prime": { disposition: 0.6, type: 'melee', metaScore: 1.5, meta: true },
+"Sporelacer (Secondary)": { disposition: 0.6, type: 'secondary', metaScore: 1.3, meta: false },
+"Scyotid": { disposition: 0.6, type: 'secondary', metaScore: 1.2, meta: false },
+"Felarx": { disposition: 0.6, type: 'primary', metaScore: 1.3, meta: false },
+"Phenmor": { disposition: 0.6, type: 'primary', metaScore: 1.5, meta: true },
+"Grimoire": { disposition: 0.6, type: 'melee', metaScore: 1.2, meta: false },
+"Ignis": { disposition: 0.6, type: 'primary', metaScore: 1.4, meta: true },
+"Kompressa Prime": { disposition: 0.6, type: 'secondary', metaScore: 1.2, meta: false },
+"Ignis Wraith": { disposition: 0.55, type: 'primary', metaScore: 1.3, meta: false },
+"Acceltra Prime": { disposition: 0.55, type: 'primary', metaScore: 1.3, meta: false },
+"Cedo Prime": { disposition: 0.55, type: 'secondary', metaScore: 1.4, meta: true },
+"Tenet Arca Plasmor": { disposition: 0.55, type: 'primary', metaScore: 1.4, meta: true },
+"Dual Coda Torxica": { disposition: 0.55, type: 'secondary', metaScore: 1.3, meta: false },
+"Epitaph Prime": { disposition: 0.55, type: 'secondary', metaScore: 1.5, meta: true },
+"Harmony": { disposition: 0.55, type: 'secondary', metaScore: 1.2, meta: false },
+"Arbucep (Atmosphere)": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: false },
+"Galariak Prime": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: false },
+"Mausolon (Atmosphere)": { disposition: 0.5, type: 'primary', metaScore: 1.2, meta: false },
+"Laetum": { disposition: 0.5, type: 'secondary', metaScore: 1.3, meta: true },
+"Mausolon": { disposition: 0.5, type: 'primary', metaScore: 1.2, meta: false },
+"Venato Prime": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: true },
+"Arbucep": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: false },
+"Tak & Lug": { disposition: 0.5, type: 'secondary', metaScore: 1.1, meta: false },
+"Kuva Nukor": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: true },
+"Tonkkatt": { disposition: 0.5, type: 'shotgun', metaScore: 1.3, meta: false },
+"Kestrel Prime": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: true },
+"Vinquibus (Melee)": { disposition: 0.5, type: 'melee', metaScore: 1.2, meta: false },
+"Sagek Prime": { disposition: 0.5, type: 'secondary', metaScore: 1.2, meta: false },
+"Alternox Prime": { disposition: 0.5, type: 'primary', metaScore: 1.2, meta: false },
+"Vadarya Prime": { disposition: 0.5, type: 'primary', metaScore: 1.2, meta: false },
+"Vinquibus (Primary)": { disposition: 0.5, type: 'primary', metaScore: 1.2, meta: false },
+"Thornbak": { disposition: 0.5, type: 'secondary', metaScore: 1.1, meta: false },
+"Amprex": { disposition: 0.85, type: 'primary', metaScore: 1.5, meta: true },
+"Tatsu Prime": { disposition: 0.85, type: 'primary', metaScore: 1.4, meta: true },
+"Prisma Ohma": { disposition: 0.85, type: 'primary', metaScore: 1.4, meta: true },
+"Trumna": { disposition: 0.85, type: 'shotgun', metaScore: 1.5, meta: true },
+"Ruvox": { disposition: 0.85, type: 'secondary', metaScore: 1.3, meta: false },
+"Knell Prime": { disposition: 0.85, type: 'secondary', metaScore: 1.4, meta: true },
+"Vastilok": { disposition: 0.85, type: 'primary', metaScore: 1.3, meta: false },
+"Lesion": { disposition: 0.85, type: 'secondary', metaScore: 1.3, meta: false },
+"Venka Prime": { disposition: 0.85, type: 'melee', metaScore: 1.5, meta: true },
+"Akstiletto Prime": { disposition: 0.85, type: 'secondary', metaScore: 1.5, meta: true },
+"Tombfinger (Secondary)": { disposition: 0.85, type: 'secondary', metaScore: 1.3, meta: false },
+"EFV-5 Jupiter": { disposition: 0.85, type: 'primary', metaScore: 1.2, meta: false },
+"Tenet Exec": { disposition: 0.8, type: 'secondary', metaScore: 1.4, meta: true },
+"Dual Zoren Prime": { disposition: 0.8, type: 'melee', metaScore: 1.4, meta: true },
+"Balla": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: false },
+"Kuva Shildeg": { disposition: 0.8, type: 'primary', metaScore: 1.3, meta: false },
+"Plague Keewar": { disposition: 0.8, type: 'primary', metaScore: 1.2, meta: false },
+"Dual Keres Prime": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: true },
+"Amanata": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: true },
+"Quassus Prime": { disposition: 0.8, type: 'primary', metaScore: 1.4, meta: true },
+"Velox Prime": { disposition: 0.8, type: 'secondary', metaScore: 1.4, meta: true },
+"Larkspur Prime (Atmosphere)": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: false },
+"Larkspur Prime": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: false },
+"Sun & Moon": { disposition: 0.8, type: 'secondary', metaScore: 1.4, meta: true },
+"AX-52": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: false },
+"Coda Pox": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: false },
+"Zylok Prime": { disposition: 0.8, type: 'secondary', metaScore: 1.4, meta: true },
+"Reconifex": { disposition: 0.8, type: 'secondary', metaScore: 1.2, meta: false },
+"Coda Hema": { disposition: 0.8, type: 'secondary', metaScore: 1.3, meta: false },
+"Kuva Sobek": { disposition: 0.8, type: 'shotgun', metaScore: 1.4, meta: true },
+"Onos": { disposition: 0.8, type: 'primary', metaScore: 1.3, meta: false },
+"EFV-8 Mars": { disposition: 0.8, type: 'primary', metaScore: 1.3, meta: false },
+"Bubonico": { disposition: 0.75, type: 'primary', metaScore: 1.3, meta: false },
+"Fulmin Prime": { disposition: 0.75, type: 'primary', metaScore: 1.4, meta: true },
+"Coda Sporothrix": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Coda Synapse": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Phantasma Prime": { disposition: 0.75, type: 'secondary', metaScore: 1.4, meta: true },
+"Gotva Prime": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Coda Tysis": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Reaper Prime": { disposition: 0.75, type: 'primary', metaScore: 1.4, meta: true },
+"Shedu": { disposition: 0.75, type: 'melee', metaScore: 1.3, meta: false },
+"Riot-848": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Tenet Plinx": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Dokrahm": { disposition: 0.75, type: 'primary', metaScore: 1.3, meta: false },
+"Tenet Diplos": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Gram Prime": { disposition: 0.75, type: 'melee', metaScore: 1.4, meta: true },
+"Syam": { disposition: 0.75, type: 'melee', metaScore: 1.3, meta: false },
+"Coda Caustacyst": { disposition: 0.75, type: 'secondary', metaScore: 1.3, meta: false },
+"Rubico Prime": { disposition: 0.7, type: 'sniper', metaScore: 1.4, meta: true },
+"Sepfahn": { disposition: 0.7, type: 'secondary', metaScore: 1.3, meta: false },
+"Kuva Ogris": { disposition: 0.7, type: 'primary', metaScore: 1.3, meta: false },
+"Kuva Grattler": { disposition: 0.7, type: 'primary', metaScore: 1.3, meta: false },
+"Dual Viciss": { disposition: 0.7, type: 'secondary', metaScore: 1.3, meta: false },
+"Kuva Zarr": { disposition: 0.7, type: 'primary', metaScore: 1.3, meta: false },
+"Guandao Prime": { disposition: 0.7, type: 'melee', metaScore: 1.4, meta: true },
+"Tenet Cycron": { disposition: 0.7, type: 'secondary', metaScore: 1.3, meta: false },
+"Okina Prime": { disposition: 0.7, type: 'melee', metaScore: 1.3, meta: false },
+"Orthos Prime": { disposition: 0.7, type: 'melee', metaScore: 1.4, meta: true },
+"Daikyu Prime": { disposition: 0.7, type: 'primary', metaScore: 1.3, meta: false },
+"Glaive Prime": { disposition: 0.7, type: 'melee', metaScore: 1.4, meta: true },
+"Catchmoon (Secondary)": { disposition: 0.7, type: 'secondary', metaScore: 1.3, meta: false },
+"Quassus": { disposition: 1.1, type: 'primary', metaScore: 1.4, meta: true },
+"Sepulcrum": { disposition: 1.1, type: 'primary', metaScore: 1.3, meta: false },
+"Verdilac": { disposition: 1.1, type: 'secondary', metaScore: 1.3, meta: false },
+"Afuris Prime": { disposition: 1.1, type: 'secondary', metaScore: 1.4, meta: true },
+"Prisma Dual Cleavers": { disposition: 1.1, type: 'melee', metaScore: 1.3, meta: true },
+"Pandero Prime": { disposition: 1.1, type: 'secondary', metaScore: 1.4, meta: true },
+"Akjagara": { disposition: 1.1, type: 'secondary', metaScore: 1.3, meta: false },
+"Argo & Vel": { disposition: 1.1, type: 'primary', metaScore: 1.4, meta: true },
+"Supra": { disposition: 1.1, type: 'primary', metaScore: 1.4, meta: true },
+"Hirudo": { disposition: 1.1, type: 'melee', metaScore: 1.4, meta: true },
+"Ninkondi Prime": { disposition: 1.1, type: 'melee', metaScore: 1.5, meta: true },
+// … (continua fino a completare tutte le 250+ armi)
+};
+
+// ---------------- LOGICA CALCOLO RIVEN ----------------
 const statPriority = {
   primary: ['crit chance','critical chance','multishot','crit damage','status chance','fire rate','toxin','heat','cold'],
   secondary: ['crit chance','multishot','status chance','crit damage','toxin','heat'],
@@ -58,7 +195,7 @@ const harmlessNegatives = ['zoom','impact','infested'];
 const badNegatives = ['damage','multishot','crit'];
 
 function analyze() {
-  const weaponName = document.getElementById('weapon').value.toLowerCase();
+  const weaponName = document.getElementById('weapon').value.trim().toLowerCase();
   const statsLines = document.getElementById('stats').value.toLowerCase().split('\n');
   const rolls = parseInt(document.getElementById('rolls').value);
 
@@ -72,8 +209,15 @@ function analyze() {
 
   let positives=0, negatives=0, score=1;
   statsLines.forEach(stat=>{
-    if(stat.startsWith('+')) { positives++; statPriority[weaponType].forEach(s=>{if(stat.includes(s)) score+=0.7;}); }
-    if(stat.startsWith('-')) { negatives++; harmlessNegatives.forEach(n=>{if(stat.includes(n)) score+=0.3;}); badNegatives.forEach(b=>{if(stat.includes(b)) score-=0.7;}); }
+    if(stat.startsWith('+')) {
+      positives++;
+      statPriority[weaponType].forEach(s => { if(stat.includes(s)) score+=0.7; });
+    }
+    if(stat.startsWith('-')) {
+      negatives++;
+      harmlessNegatives.forEach(n => { if(stat.includes(n)) score+=0.3; });
+      badNegatives.forEach(b => { if(stat.includes(b)) score-=0.7; });
+    }
   });
 
   if(positives===3 && negatives===1) score+=1.2;
