@@ -1,1 +1,111 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2867 \cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;} {\colortbl;\red255\green255\blue255;} {\*\expandedcolortbl;;} \paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0 \f0\fs24 \cf0 \ \ \ \ \ \ \ \ \ \ Warframe Riven Analyzer PRO \ \ \ Nome Arma (es. Torid, Rubico, Bramma)\ \ \ Statistiche Riven (una per riga, come in-game)\ \ \ Numero di Reroll\ \ \ Analizza Riven\ \ Inserisci i dati per ottenere l'analisi \ \ \ \ Come funziona il calcolo Riven \ Questo strumento stima il prezzo di una Riven basandosi su: \ \ â€¢ Valori reali delle armi (disposition, domanda sul mercato, meta/non-meta) \ â€¢ Tipo di arma (primary, secondary, melee, shotgun, sniper) \ â€¢ Statistiche positive e negative della Riven, con priorit\'e0 diverse a seconda del tipo d'arma \ â€¢ Numero di reroll effettuati \ â€¢ Combinazioni di stat (3 positivi + 1 negativo, 3 positivi + 0 negativo, ecc.) \ \ Se l'arma non \'e8 nel database, il sistema utilizza valori medi stimati dalla community per fornire comunque una valutazione credibile. \ \ \ Fan-made \'95 Basato su analisi community, forum e warframe.market \ \ \ \ }
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Warframe Riven Analyzer PRO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Helvetica', sans-serif; background:#0f172a; color:#e5e7eb; padding:20px; }
+    h1 { text-align:center; color:#38bdf8; }
+    .container { max-width:900px; margin:auto; background:#020617; padding:20px; border-radius:12px; box-shadow:0 0 20px rgba(56,189,248,0.2); }
+    label { display:block; margin-top:15px; }
+    input, textarea { width:100%; padding:8px; margin-top:5px; border-radius:6px; border:none; }
+    button { margin-top:20px; width:100%; padding:12px; background:#38bdf8; color:#020617; font-size:16px; border:none; border-radius:8px; cursor:pointer; }
+    .result { margin-top:20px; padding:15px; background:#020617; border:1px solid #38bdf8; border-radius:8px; font-size:16px; }
+    footer { text-align:center; margin-top:20px; font-size:12px; opacity:0.7; }
+    .tag { display:inline-block; padding:4px 8px; margin:4px; background:#1e293b; border-radius:6px; font-size:12px; }
+    .section { margin-top:40px; }
+    .section h2 { color:#0ea5e9; }
+  </style>
+</head>
+<body>
+<h1>Warframe Riven Analyzer PRO</h1>
+
+<div class="container">
+  <label>Nome Arma (es. Torid, Rubico Prime, Nikana)</label>
+  <input id="weapon" />
+
+  <label>Statistiche Riven (una per riga, es. +Crit Chance, -Damage)</label>
+  <textarea id="stats" rows="5"></textarea>
+
+  <label>Numero di Reroll</label>
+  <input type="number" id="rolls" value="0" min="0" />
+
+  <button onclick="analyze()">Analizza Riven</button>
+
+  <div class="result" id="result">Inserisci i dati per ottenere l'analisi</div>
+</div>
+
+<div class="container section">
+  <h2>Come funziona il calcolo Riven</h2>
+  <p>Stima prezzo basato su disposition reale, tipo arma, metaScore e statistiche.</p>
+</div>
+
+<footer>Fan-made • Basato su Warframe Wiki & community</footer>
+
+<!-- Import database esterno -->
+<script src="weapons-riven-data.js"></script>
+
+<script>
+const statPriority = {
+  primary: ['crit chance','critical chance','multishot','crit damage','status chance','fire rate','toxin','heat','cold'],
+  secondary: ['crit chance','multishot','status chance','crit damage','toxin','heat'],
+  sniper: ['crit damage','crit chance','multishot'],
+  shotgun: ['multishot','status chance','crit chance'],
+  melee: ['crit chance','crit damage','range','attack speed','status chance']
+};
+const harmlessNegatives = ['zoom','impact','infested'];
+const badNegatives = ['damage','multishot','crit'];
+
+function analyze() {
+  const weaponName = document.getElementById('weapon').value.toLowerCase();
+  const statsLines = document.getElementById('stats').value.toLowerCase().split('\n');
+  const rolls = parseInt(document.getElementById('rolls').value);
+
+  let disposition=1, metaScore=1.1, weaponType='primary', meta=false;
+  if(weapons[weaponName]) {
+    disposition = weapons[weaponName].disposition;
+    metaScore = weapons[weaponName].metaScore;
+    weaponType = weapons[weaponName].type;
+    meta = weapons[weaponName].meta;
+  }
+
+  let positives=0, negatives=0, score=1;
+  statsLines.forEach(stat=>{
+    if(stat.startsWith('+')) { positives++; statPriority[weaponType].forEach(s=>{if(stat.includes(s)) score+=0.7;}); }
+    if(stat.startsWith('-')) { negatives++; harmlessNegatives.forEach(n=>{if(stat.includes(n)) score+=0.3;}); badNegatives.forEach(b=>{if(stat.includes(b)) score-=0.7;}); }
+  });
+
+  if(positives===3 && negatives===1) score+=1.2;
+  if(positives===3 && negatives===0) score+=0.8;
+  if(positives===2 && negatives===1) score+=0.3;
+
+  const base=45;
+  const rollFactor=1+(rolls*0.04);
+  const marketValue = base*score*disposition*metaScore*rollFactor;
+  const price=Math.round(marketValue);
+  const minPrice=Math.max(20, Math.round(marketValue*0.85));
+  const maxPrice=Math.round(marketValue*1.2);
+
+  let tier='Trash';
+  if(price>400) tier='God Roll';
+  else if(price>250) tier='Great';
+  else if(price>150) tier='Ottima';
+  else if(price>70) tier='Media';
+
+  document.getElementById('result').innerHTML=`
+    <strong>Prezzo stimato:</strong> ${price} Platinum<br>
+    <strong>Range mercato:</strong> ${minPrice} – ${maxPrice} Platinum<br>
+    <strong>Classificazione:</strong> ${tier}<br><br>
+    <span class="tag">Positivi: ${positives}</span>
+    <span class="tag">Negativi: ${negatives}</span>
+    <span class="tag">Disposition: ${disposition}</span>
+    <span class="tag">Reroll: ${rolls}</span>
+    <span class="tag">Tipo arma: ${weaponType}</span>
+    <span class="tag">Meta: ${meta}</span>
+    ${weapons[weaponName]?'':'<br><em>Nota: arma non nel database, stima basata su valori medi.</em>'}
+  `;
+}
+</script>
+</body>
+</html>
